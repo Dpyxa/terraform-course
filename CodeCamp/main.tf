@@ -70,3 +70,31 @@ resource "aws_security_group" "ail_sg" {
     Name = "ail_test_sg"
   }
 }
+
+resource "aws_key_pair" "ail_auth" {
+  key_name   = "ailkey"
+  public_key = file("~/.ssh/ailkey.pub")
+}
+
+resource "aws_instance" "dev_node" {
+  instance_type          = "t2.micro"
+  ami                    = data.aws_ami.ail_ami.id
+  key_name               = aws_key_pair.ail_auth.id
+  vpc_security_group_ids = [aws_security_group.ail_sg.id]
+  subnet_id              = aws_subnet.ail_pulic_subnet.id
+  user_data              = file("userdata.tpl")
+
+  tags = {
+    name = "dev-node"
+  }
+
+  provisioner "local-exec" {
+    command = templatefile("${var.host_os}-ssh-config.tpl", {
+      hostname     = self.public_ip,
+      user         = "ubuntu",
+      identityfile = "~/.ssh/ailkey"
+    })
+    interpreter = var.host_os == "mac" ? ["bash", "-c"] : ["powershell", "-commanda"]
+  }
+
+}
