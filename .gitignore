@@ -5,3 +5,4 @@
 */mykey*
 demo-1/.terraform.lock.hcl
 CodeCamp/providers.tf
+CodeCamp/.terraform.lock.hcl
